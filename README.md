@@ -1,11 +1,11 @@
-This repository contains my solutions to three sequence alignment problems: pairwise, triple, and multiple sequence alignment. All three programs require the input sequences to be in the FASTA format and output the resulting alignment in the FASTA format.
+This repository contains my solutions to three sequence alignment problems: pairwise, triple, and multiple sequence alignment. All three programs require the input sequences to be in the FASTA format and output the resulting alignment in the FASTA format. In all three algorithms, indel rates are converted to gap penalties by simply taking the log-10 of the specified indel rate. Also, I do not use affine gap penalties. The algorithms currently only use the BLOSUM62 matrix for (mis)match scores, but this may be expanded in the future.
 
 * **[pairSeqAlign](pairSeqAlign.py): Perform pairwise sequence alignment**
     * This is simply an implementation of the Needleman-Wunsch algorithm (exact solution)
     * Usage: ``pairSeqAlign.py [-h] [-i INPUT] [-o OUTPUT] [-p INDEL]``
         * If no input file is specified (via `-i`), the program reads from standard input
         * If no output file is specified (via `-o`), the program writes to standard output
-        * If no indel rate is specified, a default value of 0.1 is used
+        * If no indel rate is specified, a default value of 0.1 is used (which corresponds to a gap penalty of -1)
     * Run ``./pairSeqAlign.py -h`` or ``./pairSeqAlign.py --help`` for usage help
 
 * **[tripleSeqAlign](tripleSeqAlign.py): Perform triple sequence alignment**
@@ -13,7 +13,7 @@ This repository contains my solutions to three sequence alignment problems: pair
     * Usage: ``tripleSeqAlign.py [-h] [-i INPUT] [-o OUTPUT] [-p INDEL]``
         * If no input file is specified (via `-i`), the program reads from standard input
         * If no output file is specified (via `-o`), the program writes to standard output
-        * If no indel rate is specified, a default value of 0.1 is used
+        * If no indel rate is specified, a default value of 0.1 is used (which corresponds to a gap penalty of -1)
     * Run ``./tripleSeqAlign.py -h`` or ``./tripleSeqAlign.py --help`` for usage help
 
 * **[multiSeqAlign](multiSeqAlign.py): Perform multiple sequence alignment**
@@ -26,7 +26,7 @@ This repository contains my solutions to three sequence alignment problems: pair
     * Usage: ``multiSeqAlign.py [-h] [-i INPUT] [-o OUTPUT] [-p INDEL] [-t TREE]``
         * If no input file is specified (via `-i`), the program reads from standard input
         * If no output file is specified (via `-o`), the program writes to standard output
-        * If no indel rate is specified, a default value of 0.1 is used
+        * If no indel rate is specified, a default value of 0.1 is used (which corresponds to a gap penalty of -1)
     * Run ``./tripleSeqAlign.py -h`` or ``./tripleSeqAlign.py --help`` for usage help
 
 REQUIREMENTS

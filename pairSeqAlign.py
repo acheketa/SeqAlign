@@ -7,12 +7,12 @@ Niema Moshiri 2017
 from common import BLOSUM62 as M
 from common import indelToGap
 from common import parseFASTA
-import argparse,time
+import argparse,sys,time
 
 # perform pairwise alignment
 def pairAlign(seqs, gap):
     if len(seqs) != 2:
-        print("ERROR: pairAlign must take in exactly 2 sequences")
+        sys.stderr.write("ERROR: pairAlign must take in exactly 2 sequences\n")
         exit(-1)
     sID,tID = sorted(seqs.keys())
     s,t = seqs[sID],seqs[tID]
@@ -53,23 +53,23 @@ def pairAlign(seqs, gap):
 # main function
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-i', '--input',  required=True,  type=argparse.FileType('r'), help="Input FASTA File")
-    parser.add_argument('-o', '--output', required=True,  type=argparse.FileType('w'), help="Output FASTA File")
-    parser.add_argument('-p', '--indel',  required=False, type=float, default=0.1,     help="Indel Ratio")
+    parser.add_argument('-i', '--input',  required=False, type=argparse.FileType('r'), default=sys.stdin,  help="Input FASTA File")
+    parser.add_argument('-o', '--output', required=False, type=argparse.FileType('w'), default=sys.stdout, help="Output FASTA File")
+    parser.add_argument('-p', '--indel',  required=False, type=float,                  default=0.1,        help="Indel Ratio")
     args = parser.parse_args()
     start_time = time.time()
-    print("User-specified indel rate: " + str(args.indel))
+    sys.stderr.write("User-specified indel rate: " + str(args.indel) + '\n')
     gap = indelToGap(args.indel)
-    print("Indel rate converted to gap rate: " + str(gap))
-    print("Parsing input FASTA file...")
+    sys.stderr.write("Indel rate converted to gap rate: " + str(gap) + '\n')
+    sys.stderr.write("Parsing input FASTA file...\n")
     seqs = parseFASTA(args.input)
-    print("Computing 2D dynamic programming matrix...")
+    sys.stderr.write("Computing 2D dynamic programming matrix...\n")
     score,aln = pairAlign(seqs, gap)
-    print("Writing output alignment...")
+    sys.stderr.write("Writing output alignment...\n")
     for ID in sorted(aln.keys()):
         args.output.write('>')
         args.output.write(ID)
         args.output.write('\n')
         args.output.write(aln[ID])
         args.output.write('\n')
-    print("--- Completed in %s seconds ---" % (time.time() - start_time))
+    sys.stderr.write("--- Completed in %s seconds ---" % (time.time() - start_time) + '\n')

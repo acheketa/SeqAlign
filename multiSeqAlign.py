@@ -9,7 +9,7 @@ from common import indelToGap
 from common import parseFASTA
 from pairSeqAlign import pairAlign
 from tripleSeqAlign import tripleAlign
-import argparse,time
+import argparse,sys,time
 try:
     import Queue as Q  # ver. < 3.0
 except ImportError:
@@ -83,11 +83,13 @@ def mergeAlign(aln, ID, seq, gap):
 
 # perform multiple sequence alignment without tree
 def multiAlign(seqs, gap, treefile):
-    if len(seqs) < 3:
-        print("ERROR: Input contained less than 3 sequences")
-        exit(-1)
+    if len(seqs) == 2:
+        return pairAlign(seqs, gap)
     elif len(seqs) == 3:
         return tripleAlign(seqs, gap)
+    elif len(seqs) < 2:
+        sys.stderr.write("ERROR: Input contained less than 3 sequences\n")
+        exit(-1)
 
     # create distance matrix
     IDs = sorted(list(seqs.keys()))
@@ -97,16 +99,16 @@ def multiAlign(seqs, gap, treefile):
 
     # generate distance matrix from tree
     if treefile != None:
-        print("Tree file was specified. Computing distance matrix from tree...")
+        sys.stderr.write("Tree file was specified. Computing distance matrix from tree...\n")
         try:
             import dendropy
         except:
-            print("ERROR: Failed to import dendropy")
-            print("You need dendropy installed to pass in a tree file")
+            sys.stderr.write("ERROR: Failed to import dendropy\n")
+            sys.stderr.write("You need dendropy installed to pass in a tree file\n")
             exit(-1)
-        print("Reading tree...")
+        sys.stderr.write("Reading tree...\n")
         tree = dendropy.Tree.get(file=treefile, schema='newick')
-        print("Computing distance matrix...")
+        sys.stderr.write("Computing distance matrix...\n")
         pdm = tree.phylogenetic_distance_matrix()
         label2taxon = {}
         for leaf in tree.leaf_node_iter():
@@ -121,7 +123,7 @@ def multiAlign(seqs, gap, treefile):
 
     # generate distance matrix from pairwise alignments
     else:
-        print("No tree file was specified. Computing distance matrix from pairwise alignments...")
+        sys.stderr.write("No tree file was specified. Computing distance matrix from pairwise alignments...\n")
         for i in range(0, len(IDs)-1):
             for j in range(i+1, len(IDs)):
                 iID = IDs[i]
@@ -131,7 +133,7 @@ def multiAlign(seqs, gap, treefile):
                 dm[jID][iID] = d
 
     # find 3 closest sequences for start
-    print("Finding three closest sequences...")
+    sys.stderr.write("Finding three closest sequences...\n")
     bestPair = None
     for i in range(0, len(IDs)-1):
         iID = IDs[i]
@@ -152,7 +154,7 @@ def multiAlign(seqs, gap, treefile):
     kID = bestThird[1]
 
     # merge alignments
-    print("Performing triple sequence alignment on three closest sequences...")
+    sys.stderr.write("Performing triple sequence alignment on three closest sequences...\n")
     out = tripleAlign({iID:seqs[iID], jID:seqs[jID], kID:seqs[kID]}, gap)[1]
     pq = Q.PriorityQueue()
     for ID in IDs:
@@ -161,7 +163,7 @@ def multiAlign(seqs, gap, treefile):
             pq.put((dm[jID][ID],ID))
             pq.put((dm[kID][ID],ID))
     score = None
-    print("Merging remaining sequences into alignment...")
+    sys.stderr.write("Merging remaining sequences into alignment...\n")
     while len(out.keys()) < len(IDs):
         d,ID = pq.get()
         if ID in out:
@@ -175,24 +177,24 @@ def multiAlign(seqs, gap, treefile):
 # main function
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-i', '--input',   required=True,  type=argparse.FileType('r'),               help="Input FASTA File")
-    parser.add_argument('-o', '--output',  required=True,  type=argparse.FileType('w'),               help="Output FASTA File")
-    parser.add_argument('-p', '--indel',   required=False, type=float,                  default=0.1,  help="Indel Ratio")
-    parser.add_argument('-t', '--tree',    required=False, type=argparse.FileType('r'), default=None, help="Guide Tree")
+    parser.add_argument('-i', '--input',  required=False, type=argparse.FileType('r'), default=sys.stdin,  help="Input FASTA File")
+    parser.add_argument('-o', '--output', required=False, type=argparse.FileType('w'), default=sys.stdout, help="Output FASTA File")
+    parser.add_argument('-p', '--indel',  required=False, type=float,                  default=0.1,        help="Indel Ratio")
+    parser.add_argument('-t', '--tree',   required=False, type=argparse.FileType('r'), default=None,       help="Guide Tree")
     args = parser.parse_args()
     start_time = time.time()
-    print("User-specified indel rate: " + str(args.indel))
+    sys.stderr.write("User-specified indel rate: " + str(args.indel) + '\n')
     gap = indelToGap(args.indel)
-    print("Indel rate converted to gap rate: " + str(gap))
-    print("Parsing input FASTA file...")
+    sys.stderr.write("Indel rate converted to gap rate: " + str(gap) + '\n')
+    sys.stderr.write("Parsing input FASTA file...\n")
     seqs = parseFASTA(args.input)
-    print("Computing performing sequence alignment...")
+    sys.stderr.write("Computing performing sequence alignment...\n")
     aln = multiAlign(seqs, gap, args.tree)[1]
-    print("Writing output alignment...")
+    sys.stderr.write("Writing output alignment...\n")
     for ID in sorted(aln.keys()):
         args.output.write('>')
         args.output.write(ID)
         args.output.write('\n')
         args.output.write(aln[ID])
         args.output.write('\n')
-    print("--- Completed in %s seconds ---" % (time.time() - start_time))
+    sys.stderr.write("--- Completed in %s seconds ---" % (time.time() - start_time) + '\n')

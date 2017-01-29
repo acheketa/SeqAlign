@@ -10,7 +10,7 @@ BLOSUM62 = {"A":{"A":4,"C":0,"B":-2,"E":-1,"D":-2,"G":0,"F":-2,"I":-1,"H":-2,"K"
 
 # convert an indel rate to a gap penalty
 def indelToGap(indel):
-    return max(0,log(indel, 2)) # simply compute log-base2 of the indel rate
+    return min(0,log(indel, 2)) # simply compute log-base2 of the indel rate
 
 # parse FASTA file (single-line or multi-line)
 def parseFASTA(f):
